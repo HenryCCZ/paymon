@@ -64,7 +64,7 @@ export default function Home() {
           </p>
 
           <h2 className="text-4xl font-bold mb-4">
-            $158,670.00 MXN
+            $12,450.00 MXN
           </h2>
 
           <p className="text-green-400">
