@@ -19,10 +19,8 @@ export default function Home() {
   const [menuAbierto, setMenuAbierto] = useState(false);
   // Referencia para hacer auto-scroll al final del chat
   const finDelChatRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    // Cada vez que la lista de mensajes cambie, bajamos el scroll automáticamente
-    finDelChatRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensajes]);
+  // Estado para controlar la pantalla de carga (inicia en true para que sea lo primero que se vea)
+  const [mostrarSplash, setMostrarSplash] = useState(true);
 
   async function enviarMensaje() {
     if (!input.trim()) return;
@@ -63,7 +61,48 @@ export default function Home() {
       setCargando(false);
     }
   }
+  
+  // Efecto para quitar el splash screen después de 3 segundos
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMostrarSplash(false);
+    }, 3000); // 3000 milisegundos = 3 segundos
+    
+    // Es una buena práctica limpiar los timers al desmontar el componente
+    return () => clearTimeout(timer); 
+  }, []);
+  useEffect(() => {
+    // Cada vez que la lista de mensajes cambie, bajamos el scroll automáticamente
+    finDelChatRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajes]);
 
+  if (mostrarSplash) {
+    return (
+      <main className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 text-center font-sans">
+        
+        {/* Contenedor del Logo con una sutil animación */}
+        <div className="relative w-40 h-40 mb-8 animate-pulse">
+          <Image 
+            src="/logo.jpeg" 
+            alt="Logo de Payvat" 
+            fill 
+            className="object-contain rounded-3xl shadow-2xl shadow-blue-500/20"
+          />
+        </div>
+        
+        {/* Título Principal */}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-700">
+          Bienvenido a Payvat tu app bancaria
+        </h1>
+        
+        {/* Subtítulo */}
+        <p className="text-gray-400 text-lg md:text-xl font-medium animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+          Integrado con Paymon un agente financiero de IA
+        </p>
+
+      </main>
+    );
+  }
   return (
     // Fondo con gradiente moderno
     <main className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-900 text-white p-4 md:p-8 font-sans">
@@ -139,7 +178,7 @@ export default function Home() {
             Saldo disponible
           </p>
           <h2 className="text-5xl font-black mb-4 tracking-tight">
-            $12,450 <span className="text-xl text-gray-500 font-semibold">MXN</span>
+            $12,450.00  <span className="text-xl text-gray-500 font-semibold">MXN</span>
           </h2>
           <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm font-semibold">
             <span>↑ 8.4%</span>
