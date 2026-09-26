@@ -18,10 +18,23 @@ export default function Home() {
   const [cargando, setCargando] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [pendingAction, setPendingAction] = useState<any>(null);
+  const [saldo, setSaldo] = useState<{ balance: string; currency: string } | null>(null);
   // Referencia para hacer auto-scroll al final del chat
   const finDelChatRef = useRef<HTMLDivElement>(null);
   // Estado para controlar la pantalla de carga (inicia en true para que sea lo primero que se vea)
   const [mostrarSplash, setMostrarSplash] = useState(true);
+
+  async function cargarSaldo() {
+    try {
+      const response = await fetch("/api/balance");
+      if (!response.ok) {
+        throw new Error("No se pudo cargar el saldo.");
+      }
+      setSaldo(await response.json());
+    } catch (error) {
+      console.error("Error al cargar el saldo:", error);
+    }
+  }
 
   async function enviarMensaje() {
     if (!input.trim()) return;
@@ -78,6 +91,7 @@ export default function Home() {
         throw new Error("No se pudo confirmar el pago.");
       }
 
+      await cargarSaldo();
       setMensajes((prev) => [
         ...prev,
         { id: Date.now(), rol: "paymon", texto: "✓ Pago recurrente creado." },
@@ -127,6 +141,11 @@ export default function Home() {
     // Es una buena práctica limpiar los timers al desmontar el componente
     return () => clearTimeout(timer); 
   }, []);
+  useEffect(() => {
+    if (!mostrarSplash) {
+      void cargarSaldo();
+    }
+  }, [mostrarSplash]);
   useEffect(() => {
     // Cada vez que la lista de mensajes cambie, bajamos el scroll automáticamente
     finDelChatRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -235,7 +254,9 @@ export default function Home() {
           </p>
 
           <h2 className="text-4xl font-bold mb-4">
-            $158,670.00 MXN
+            {saldo
+              ? `$${Number(saldo.balance).toLocaleString("es-MX", { minimumFractionDigits: 2 })} ${saldo.currency}`
+              : "Cargando..."}
           </h2>
           <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm font-semibold">
             <span>↑ 8.4%</span>
