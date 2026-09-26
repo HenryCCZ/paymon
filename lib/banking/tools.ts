@@ -205,3 +205,32 @@ export async function proposeRecurringPayment(
     dayOfMonth: dayOfMonth ?? null,
   };
 }
+
+export async function proposeCryptoTransaction(
+  toAddress: string,
+  amount: number
+) {
+  if (amount <= 0) throw new Error("Monto inválido.");
+
+  const action = await prisma.aiAction.create({
+    data: {
+      userId: DEMO_USER_ID,
+      action: "create_crypto_transaction",
+      status: ActionStatus.PENDING_CONFIRMATION,
+      arguments: {
+        toAddress,
+        amount,
+        token: "XLM",
+        network: "stellar-testnet",
+      },
+    },
+  });
+
+  return {
+    actionId: action.id,
+    type: "crypto",
+    toAddress,
+    amount,
+    token: "XLM",
+  };
+}

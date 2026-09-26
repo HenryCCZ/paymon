@@ -1,7 +1,6 @@
 "use client";
 
-import { PollarProvider, usePollar } from "@pollar/react";
-import "@pollar/react/styles.css";
+import { usePollar } from "@pollar/react";
 
 function WalletDemo() {
   const { isAuthenticated, wallet, login, logout } = usePollar();
@@ -37,19 +36,12 @@ function WalletDemo() {
 
 export default function CryptoPage() {
   return (
-    <PollarProvider
-      client={{
-        apiKey: process.env.NEXT_PUBLIC_POLLAR_API_KEY!,
-        stellarNetwork: "testnet",
-      }}
-    >
-      <main className="flex min-h-screen items-center justify-center bg-gray-950 p-6 text-white">
-        <section className="w-full max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl">
-          <h1 className="mb-2 text-2xl font-bold">Wallet Stellar</h1>
-          <p className="mb-6 text-gray-400">Prueba de conexión con Pollar.</p>
-          <WalletDemo />
-        </section>
-      </main>
-    </PollarProvider>
+    <main className="flex min-h-screen items-center justify-center bg-gray-950 p-6 text-white">
+      <section className="w-full max-w-xl rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl">
+        <h1 className="mb-2 text-2xl font-bold">Wallet Stellar</h1>
+        <p className="mb-6 text-gray-400">Prueba de conexión con Pollar.</p>
+        <WalletDemo />
+      </section>
+    </main>
   );
 }
