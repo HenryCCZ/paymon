@@ -7,6 +7,7 @@ import {
   getSpendingSummary,
   getRecurringPayments,
   proposeRecurringPayment,
+  proposeCryptoTransaction,
 } from "@/lib/banking/tools";
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -97,6 +98,22 @@ const tools = [
       required: ["recipientName", "amount", "frequency"],
     },
   },
+  {
+    type: "function",
+    name: "proposeCryptoTransaction",
+    description:
+      "Prepara una propuesta de transferencia en Stellar (XLM) que el " +
+      "usuario debe confirmar y firmar desde su wallet. Nunca la envía " +
+      "directamente ni debe decirse al usuario que ya se envió.",
+    parameters: {
+      type: "object",
+      properties: {
+        toAddress: { type: "string", description: "Dirección Stellar (formato G...) del destinatario" },
+        amount: { type: "number", description: "Cantidad de XLM a enviar" },
+      },
+      required: ["toAddress", "amount"],
+    },
+  },
 
 ] as any[];
 
@@ -131,6 +148,12 @@ async function executeTool(
         args.dayOfMonth !== undefined ? Number(args.dayOfMonth) : undefined
       );
 
+    case "proposeCryptoTransaction":
+      return proposeCryptoTransaction(
+        String(args.toAddress ?? ""),
+        Number(args.amount ?? 0)
+      );
+
     default:
       throw new Error(`Herramienta desconocida: ${name}`);
   }
@@ -150,6 +173,7 @@ Reglas:
 - Para preguntas como "¿en qué estoy gastando más?", "dame un resumen de mis gastos" o "¿cuál es mi mayor gasto?", utiliza getSpendingSummary.
 - Para consultar pagos recurrentes activos utiliza getRecurringPayments.
 - Para programar un pago recurrente utiliza proposeRecurringPayment. NUNCA digas que el pago ya fue creado o confirmado: solo describe la propuesta (destinatario, monto, frecuencia) y explica que el usuario debe confirmarla.
+- Para preparar una transferencia en Stellar utiliza proposeCryptoTransaction. NUNCA digas que ya se envió: solo describe la propuesta y explica que el usuario debe confirmarla y firmarla desde su wallet.
 - No ejecutes transferencias todavía.
 
 Pregunta del usuario:
@@ -214,7 +238,9 @@ ${message}
     }));
 
     const proposedAction = toolResults.find(
-      (toolResult) => toolResult.name === "proposeRecurringPayment"
+      (toolResult) =>
+        toolResult.name === "proposeRecurringPayment" ||
+        toolResult.name === "proposeCryptoTransaction"
     );
     if (proposedAction) {
       pendingAction = proposedAction.result;

@@ -14,11 +14,7 @@ export async function POST(request: Request) {
 
   const action = await prisma.aiAction.findUnique({ where: { id: actionId } });
 
-  if (
-    !action ||
-    action.action !== "create_recurring_payment" ||
-    action.status !== ActionStatus.PENDING_CONFIRMATION
-  ) {
+  if (!action || action.status !== ActionStatus.PENDING_CONFIRMATION) {
     return NextResponse.json(
       { error: "Acción no válida o ya procesada." },
       { status: 400 }

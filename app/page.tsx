@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { usePollar } from "@pollar/react";
 
 // Definimos la estructura de un mensaje para Typescript/Javascript
 interface Mensaje {
@@ -10,6 +11,7 @@ interface Mensaje {
 }
 
 export default function Home() {
+  const { sendPayment } = usePollar();
   // Inicializamos el estado con un mensaje de bienvenida de Paymon
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     { id: 1, rol: "paymon", texto: "¡Hola! Soy Paymon, tu agente financiero. ¿En qué te puedo ayudar hoy?" }
@@ -103,6 +105,44 @@ export default function Home() {
         { id: Date.now(), rol: "paymon", texto: "No pude confirmar el pago recurrente." },
       ]);
     }
+  }
+
+  async function confirmarAccion() {
+    if (!pendingAction) return;
+
+    if (pendingAction.type === "crypto") {
+      try {
+        const result = await sendPayment({
+          chain: "STELLAR",
+          destination: pendingAction.toAddress,
+          amount: String(pendingAction.amount),
+          asset: { type: "native" },
+        });
+
+        if (result.status === "error") {
+          setMensajes((prev) => [...prev, { id: Date.now(), rol: "paymon", texto: `No se pudo enviar: ${result.details ?? "error desconocido"}` }]);
+          return;
+        }
+
+        const response = await fetch("/api/actions/confirm-crypto", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ actionId: pendingAction.actionId, txHash: result.hash }),
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo registrar la transacción.");
+        }
+
+        setMensajes((prev) => [...prev, { id: Date.now(), rol: "paymon", texto: `✓ Transacción enviada. Hash: ${result.hash}` }]);
+        setPendingAction(null);
+      } catch (error) {
+        setMensajes((prev) => [...prev, { id: Date.now(), rol: "paymon", texto: "No pude completar la transacción." }]);
+      }
+      return;
+    }
+
+    await confirmarPago();
   }
 
   async function cancelarPago() {
@@ -306,16 +346,29 @@ export default function Home() {
           {pendingAction !== null && (
             <div className="mb-4 rounded-2xl border border-gray-700 bg-gray-800/80 p-4 text-gray-200">
               <h3 className="mb-3 text-lg font-semibold text-white">
-                Confirmación de pago
+                {pendingAction.type === "crypto"
+                  ? "Confirmación de transferencia"
+                  : "Confirmación de pago"}
               </h3>
-              <p>Destinatario: {pendingAction.recipientName}</p>
-              <p>
-                Cantidad: {pendingAction.amount} {pendingAction.currency}
-              </p>
-              <p>Frecuencia: {pendingAction.frequency}</p>
+              {pendingAction.type === "crypto" ? (
+                <>
+                  <p>Destino: {pendingAction.toAddress}</p>
+                  <p>
+                    Cantidad: {pendingAction.amount} {pendingAction.token}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>Destinatario: {pendingAction.recipientName}</p>
+                  <p>
+                    Cantidad: {pendingAction.amount} {pendingAction.currency}
+                  </p>
+                  <p>Frecuencia: {pendingAction.frequency}</p>
+                </>
+              )}
               <div className="mt-4 flex gap-3">
                 <button
-                  onClick={confirmarPago}
+                  onClick={confirmarAccion}
                   className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-500"
                 >
                   Confirmar
