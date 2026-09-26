@@ -12,10 +12,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const respuesta = await askPaymon(mensaje);
+    const { text, pendingAction } = await askPaymon(mensaje);
 
     return NextResponse.json({
-      respuesta,
+      respuesta: text,
+      pendingAction,
     });
 
   } catch (error) {

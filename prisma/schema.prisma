@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  FOOD
+  TRANSPORT
+  ENTERTAINMENT
+  SERVICES
+  SHOPPING
+  INCOME
+  OTHER
+}
+
+enum TxType {
+  INCOME
+  EXPENSE
+}
+
+enum Frequency {
+  WEEKLY
+  MONTHLY
+}
+
+enum RecurringStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum ActionStatus {
+  DRAFT
+  PENDING_CONFIRMATION
+  CONFIRMED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  name               String
+  email              String              @unique
+  stellarAddress     String?
+  createdAt          DateTime            @default(now())
+  accounts           Account[]
+  recipients         Recipient[]
+  recurringPayments  RecurringPayment[]
+  aiActions          AiAction[]
+  cryptoTransactions CryptoTransaction[]
+}
+
+model Account {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  name              String
+  currency          String             @default("MXN")
+  balance           Decimal            @db.Decimal(14, 2)
+  transactions      Transaction[]
+  recurringPayments RecurringPayment[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id])
+  amount      Decimal  @db.Decimal(14, 2)
+  type        TxType
+  category    Category
+  merchant    String
+  description String?
+  date        DateTime
+
+  @@index([accountId, date])
+  @@index([accountId, category])
+}
+
+model Recipient {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  name              String
+  accountRef        String?
+  stellarAddress    String?
+  recurringPayments RecurringPayment[]
+}
+
+model RecurringPayment {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  accountId   String
+  account     Account         @relation(fields: [accountId], references: [id])
+  recipientId String
+  recipient   Recipient       @relation(fields: [recipientId], references: [id])
+  amount      Decimal         @db.Decimal(14, 2)
+  currency    String          @default("MXN")
+  frequency   Frequency
+  dayOfWeek   Int?
+  dayOfMonth  Int?
+  nextRunAt   DateTime
+  status      RecurringStatus @default(ACTIVE)
+  createdAt   DateTime        @default(now())
+
+  @@index([userId, status])
+}
+
+model AiAction {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  action      String
+  arguments   Json
+  status      ActionStatus @default(PENDING_CONFIRMATION)
+  result      Json?
+  createdAt   DateTime     @default(now())
+  confirmedAt DateTime?
+
+  cryptoTransaction CryptoTransaction?
+
+  @@index([userId, status])
+}
+
+model CryptoTransaction {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  actionId  String?      @unique
+  action    AiAction?    @relation(fields: [actionId], references: [id])
+  toAddress String
+  amount    Decimal      @db.Decimal(20, 6)
+  token     String       @default("USDC")
+  network   String       @default("stellar-testnet")
+  txHash    String?
+  status    ActionStatus @default(PENDING_CONFIRMATION)
+  createdAt DateTime     @default(now())
+}

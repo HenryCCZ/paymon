@@ -17,6 +17,7 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [cargando, setCargando] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [pendingAction, setPendingAction] = useState<any>(null);
   // Referencia para hacer auto-scroll al final del chat
   const finDelChatRef = useRef<HTMLDivElement>(null);
   // Estado para controlar la pantalla de carga (inicia en true para que sea lo primero que se vea)
@@ -43,6 +44,7 @@ export default function Home() {
       });
 
       const data = await response.json();
+      setPendingAction(data.pendingAction ?? null);
 
       if (!response.ok) {
         throw new Error("Fallo en la respuesta");
@@ -59,6 +61,60 @@ export default function Home() {
       }]);
     } finally {
       setCargando(false);
+    }
+  }
+
+  async function confirmarPago() {
+    if (!pendingAction) return;
+
+    try {
+      const response = await fetch("/api/actions/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actionId: pendingAction.actionId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo confirmar el pago.");
+      }
+
+      setMensajes((prev) => [
+        ...prev,
+        { id: Date.now(), rol: "paymon", texto: "✓ Pago recurrente creado." },
+      ]);
+      setPendingAction(null);
+    } catch (error) {
+      setMensajes((prev) => [
+        ...prev,
+        { id: Date.now(), rol: "paymon", texto: "No pude confirmar el pago recurrente." },
+      ]);
+    }
+  }
+
+  async function cancelarPago() {
+    if (!pendingAction) return;
+
+    try {
+      const response = await fetch("/api/actions/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actionId: pendingAction.actionId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo cancelar el pago.");
+      }
+
+      setMensajes((prev) => [
+        ...prev,
+        { id: Date.now(), rol: "paymon", texto: "Pago cancelado." },
+      ]);
+      setPendingAction(null);
+    } catch (error) {
+      setMensajes((prev) => [
+        ...prev,
+        { id: Date.now(), rol: "paymon", texto: "No pude cancelar el pago recurrente." },
+      ]);
     }
   }
   
@@ -225,6 +281,33 @@ export default function Home() {
             )}
             <div ref={finDelChatRef} />
           </div>
+
+          {pendingAction !== null && (
+            <div className="mb-4 rounded-2xl border border-gray-700 bg-gray-800/80 p-4 text-gray-200">
+              <h3 className="mb-3 text-lg font-semibold text-white">
+                Confirmación de pago
+              </h3>
+              <p>Destinatario: {pendingAction.recipientName}</p>
+              <p>
+                Cantidad: {pendingAction.amount} {pendingAction.currency}
+              </p>
+              <p>Frecuencia: {pendingAction.frequency}</p>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={confirmarPago}
+                  className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-500"
+                >
+                  Confirmar
+                </button>
+                <button
+                  onClick={cancelarPago}
+                  className="rounded-xl border border-gray-600 bg-gray-900/60 px-4 py-2 font-semibold text-gray-200 transition-colors hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Entrada de texto */}
           <div className="flex gap-2 sm:gap-3 bg-gray-900/50 p-2 rounded-2xl border border-gray-700/50 focus-within:border-blue-500/50 transition-colors">
