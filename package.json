@@ -12,6 +12,8 @@
   "dependencies": {
     "@ai-sdk/react": "^4.0.119",
     "@google/genai": "^2.24.0",
+    "@pollar/core": "^0.11.3",
+    "@pollar/react": "^0.11.3",
     "@prisma/client": "^6.19.3",
     "@stellar/stellar-sdk": "^17.1.0",
     "next": "16.3.6",
