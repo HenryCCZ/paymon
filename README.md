@@ -282,6 +282,6 @@ Nunca deben publicarse credenciales reales en GitHub.
 
 <div align="center">
 
-Desarrollado por el equipo de Payvat
+Desarrollado por el equipo de Aqualarre
 
 </div>
