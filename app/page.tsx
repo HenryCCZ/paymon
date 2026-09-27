@@ -34,28 +34,54 @@ function hablarPaymon(texto: string) {
   window.speechSynthesis.cancel();
 
   const voz = new SpeechSynthesisUtterance(texto);
-
   const voces = window.speechSynthesis.getVoices();
 
+  
   const vozDalia = voces.find(
-    (v) => v.name === 'Microsoft Dalia Online (Natural) - Spanish (Mexico)'
+    (v) => v.name === "Microsoft Dalia Online (Natural) - Spanish (Mexico)"
   );
 
+  // 2. Si no existe Dalia
+  const vozFemeninaMexico = voces.find(
+    (v) =>
+      v.lang.startsWith("es-MX") &&
+      /dalia|libia|female|femenina|maria|maría/i.test(v.name)
+  );
+
+  // 3. Cualquier otra voz mexicana
+  const vozMexico = voces.find(
+    (v) => v.lang.startsWith("es-MX")
+  );
+
+  // 4. Cualquier voz en español como último recurso
   const vozEspanol = voces.find(
-    (v) => v.lang.startsWith("es-MX") || v.lang.startsWith("es")
+    (v) => v.lang.startsWith("es")
   );
 
-  voz.voice = vozDalia || vozEspanol || null;
+  voz.voice =
+    vozDalia ||
+    vozFemeninaMexico ||
+    vozMexico ||
+    vozEspanol ||
+    null;
 
   voz.lang = "es-MX";
 
-  // Personalidad de Paymon
-  voz.rate = 0.88;
-  voz.pitch = 1.05;
+  if (vozDalia || vozFemeninaMexico) {
+    //Personalidad de paymon
+    voz.rate = 0.88;
+    voz.pitch = 1.05;
+  } else {
+    
+    voz.rate = 0.88;
+    voz.pitch = 1.05;
+  }
+
   voz.volume = 1;
 
   window.speechSynthesis.speak(voz);
 }
+
 useEffect(() => {
   if ("speechSynthesis" in window) {
     const mostrarVoces = () => {
