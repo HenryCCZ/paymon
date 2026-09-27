@@ -121,7 +121,7 @@ Usuario confirma
 Se ejecuta la operación
 ```
 
-Paymon no debe ejecutar una operación financiera sensible únicamente porque el usuario la haya mencionado en una conversación.
+Las operaciones financieras sensibles requieren confirmación explícita del usuario antes de ejecutarse.
 
 ---
 
@@ -177,6 +177,17 @@ Payvat está construido como una aplicación web utilizando una arquitectura cli
 | Web Speech API | Voz de Paymon |
 
 ---
+---
+
+## Hackathon
+
+Payvat combina Inteligencia Artificial y tecnología Web3 para crear una experiencia financiera conversacional.
+
+### Tracks
+
+-  AI — CriptoUNAM
+-  Blockchain — Stellar
+-  Wallet — Pollar
 
 ## Estructura del proyecto
 
@@ -258,8 +269,9 @@ Las variables de entorno se utilizan para mantener las credenciales fuera del c�
 - Base de datos
 - Configuración pública del cliente
 
-Los archivos `.env`, `.env.local` y similares están excluidos mediante `.gitignore`.
+Los archivos de variables de entorno (`.env`, `.env.local`, etc.) están excluidos del control de versiones mediante `.gitignore`.
 
+Las credenciales sensibles deben configurarse localmente o mediante las variables de entorno del servicio de despliegue.
 Nunca deben publicarse credenciales reales en GitHub.
 
 ---
