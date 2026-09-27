@@ -25,6 +25,60 @@ export default function Home() {
   const finDelChatRef = useRef<HTMLDivElement>(null);
   // Estado para controlar la pantalla de carga (inicia en true para que sea lo primero que se vea)
   const [mostrarSplash, setMostrarSplash] = useState(true);
+  const [vozPaymon, setVozPaymon] = useState(true);
+
+function hablarPaymon(texto: string) {
+  if (!vozPaymon) return;
+  if (!("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel();
+
+  const voz = new SpeechSynthesisUtterance(texto);
+
+  const voces = window.speechSynthesis.getVoices();
+
+  const vozDalia = voces.find(
+    (v) => v.name === "Microsoft Dalia Online (Natural) - Spanish (Mexico)"
+  );
+
+  const vozEspanol = voces.find(
+    (v) => v.lang.startsWith("es-MX") || v.lang.startsWith("es")
+  );
+
+  voz.voice = vozDalia || vozEspanol || null;
+
+  voz.lang = "es-MX";
+
+  // Personalidad de Paymon
+  voz.rate = 0.88;
+  voz.pitch = 1.05;
+  voz.volume = 1;
+
+  window.speechSynthesis.speak(voz);
+}
+useEffect(() => {
+  if ("speechSynthesis" in window) {
+    const mostrarVoces = () => {
+      const voces = window.speechSynthesis.getVoices();
+
+      console.log(
+        "VOCES DISPONIBLES:",
+        voces.map((voz) => ({
+          nombre: voz.name,
+          idioma: voz.lang
+        }))
+      );
+    };
+
+    mostrarVoces();
+
+    window.speechSynthesis.onvoiceschanged = mostrarVoces;
+
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }
+}, []);
 
   async function cargarSaldo() {
     try {
@@ -44,6 +98,7 @@ export default function Home() {
     // 1. Guardamos el mensaje del usuario en el historial
     const nuevoMensaje: Mensaje = { id: Date.now(), rol: "usuario", texto: input };
     setMensajes((prev) => [...prev, nuevoMensaje]);
+    
     setInput("");
     setCargando(true);
 
@@ -73,14 +128,24 @@ export default function Home() {
 
       // 2. Agregamos la respuesta de Paymon al historial
       setMensajes((prev) => [...prev, { id: Date.now(), rol: "paymon", texto: data.respuesta }]);
+      hablarPaymon(data.respuesta);
 
     } catch (error) {
-      setMensajes((prev) => [...prev, { 
-        id: Date.now(), 
-        rol: "paymon", 
-        texto: "Mis circuitos fallaron. No pude conectarme con los servidores." 
-      }]);
-    } finally {
+        const mensajeError =
+          "Mis circuitos fallaron. No pude conectarme con los servidores.";
+
+        setMensajes((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            rol: "paymon",
+            texto: mensajeError,
+          },
+        ]);
+
+        hablarPaymon(mensajeError);
+
+} finally {
       setCargando(false);
     }
   }
@@ -259,6 +324,26 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setVozPaymon((actual) => {
+                  const nuevoEstado = !actual;
+
+                  // Si se apaga la voz, detener lo que Paymon esté diciendo
+                  if (!nuevoEstado && "speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                  }
+
+                  return nuevoEstado;
+                });
+              }}
+              title={vozPaymon ? "Desactivar voz de Paymon" : "Activar voz de Paymon"}
+              className="w-10 h-10 rounded-full border border-gray-700 bg-gray-800 flex items-center justify-center text-lg hover:bg-gray-700 transition-colors"
+            >
+              {vozPaymon ? "🔊" : "🔇"}
+            </button>
+
             {isAuthenticated ? (
               <span className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-200">
                 {wallet?.address
