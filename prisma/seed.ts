@@ -19,7 +19,7 @@ async function main() {
   await prisma.user.deleteMany();
 
   const user = await prisma.user.create({
-    data: { name: "Demo User", email: "demo@paymon.app" },
+    data: { id: "demo-user-001", name: "Demo User", email: "demo@paymon.app" },
   });
 
   const account = await prisma.account.create({

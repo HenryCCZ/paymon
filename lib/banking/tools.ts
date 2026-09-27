@@ -1,7 +1,7 @@
 import { ActionStatus, Category, RecurringStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
-const DEMO_USER_ID = "cmuir3xc50000eiwwzgw4606r";
+const DEMO_USER_ID = "demo-user-001";
 
 const categoryBySpanishName: Record<string, Category> = {
   comida: Category.FOOD,
