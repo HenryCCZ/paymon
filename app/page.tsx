@@ -11,7 +11,7 @@ interface Mensaje {
 }
 
 export default function Home() {
-  const { sendPayment } = usePollar();
+  const { sendPayment, isAuthenticated, wallet, login } = usePollar();
   // Inicializamos el estado con un mensaje de bienvenida de Paymon
   const [mensajes, setMensajes] = useState<Mensaje[]>([
     { id: 1, rol: "paymon", texto: "¡Hola! Soy Paymon, tu agente financiero. ¿En qué te puedo ayudar hoy?" }
@@ -111,6 +111,15 @@ export default function Home() {
     if (!pendingAction) return;
 
     if (pendingAction.type === "crypto") {
+      if (!isAuthenticated) {
+        setMensajes((prev) => [...prev, {
+          id: Date.now(),
+          rol: "paymon",
+          texto: "Primero conecta tu wallet arriba a la derecha para poder firmar esta transacción.",
+        }]);
+        return;
+      }
+
       try {
         const result = await sendPayment({
           chain: "STELLAR",
@@ -243,7 +252,24 @@ export default function Home() {
               </p>
             </div>
           </div>
-          {/* Menú de Usuario (SC) */}
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <span className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-xs text-gray-200">
+                {wallet?.address
+                  ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`
+                  : "Wallet conectada"}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => login({ provider: "google" })}
+                className="rounded-full border border-gray-700 bg-gray-800 px-3 py-1 text-xs font-medium text-gray-200 transition-colors hover:bg-gray-700"
+              >
+                Conectar wallet
+              </button>
+            )}
+
+            {/* Menú de Usuario (SC) */}
 <div className="relative hidden sm:block">
   
   {/* El botón del avatar */}
@@ -282,7 +308,8 @@ export default function Home() {
     </>
   )}
 </div>
-        </header>
+    </div>
+  </header>
 
         {/* Tarjeta de Saldo */}
         <section className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
