@@ -141,3 +141,5 @@ model CryptoTransaction {
   status    ActionStatus @default(PENDING_CONFIRMATION)
   createdAt DateTime     @default(now())
 }
+
+Wallet
