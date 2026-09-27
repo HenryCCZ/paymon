@@ -38,7 +38,7 @@ function hablarPaymon(texto: string) {
   const voces = window.speechSynthesis.getVoices();
 
   const vozDalia = voces.find(
-    (v) => v.name === "Microsoft Dalia Online (Natural) - Spanish (Mexico)"
+    (v) => v.name === 'Microsoft Dalia Online (Natural) - Spanish (Mexico)'
   );
 
   const vozEspanol = voces.find(
