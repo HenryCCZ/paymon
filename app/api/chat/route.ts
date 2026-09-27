@@ -3,7 +3,7 @@ import { askPaymon } from "@/lib/ai/agent";
 
 export async function POST(request: Request) {
   try {
-    const { mensaje } = await request.json();
+    const { mensaje, historial } = await request.json();
 
     if (!mensaje) {
       return NextResponse.json(
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { text, pendingAction } = await askPaymon(mensaje);
+    const { text, pendingAction } = await askPaymon(mensaje, historial ?? []);
 
     return NextResponse.json({
       respuesta: text,

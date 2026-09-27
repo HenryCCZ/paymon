@@ -159,7 +159,13 @@ async function executeTool(
   }
 }
 
-export async function askPaymon(message: string) {
+export async function askPaymon(
+  mensaje: string,
+  historial: any[] = []
+) {
+ const historialTexto = historial
+    .map((msj) => `${msj.role}: ${msj.content}`)
+    .join("\n");
   let input: any = `
 Eres Paymon, un agente financiero inteligente.
 
@@ -176,9 +182,13 @@ Reglas:
 - Para preparar una transferencia en Stellar utiliza proposeCryptoTransaction. NUNCA digas que ya se envió: solo describe la propuesta y explica que el usuario debe confirmarla y firmarla desde su wallet.
 - No ejecutes transferencias todavía.
 
+
+Historial de la conversación:
+${historialTexto || "No hay historial previo."}
+
 Pregunta del usuario:
 
-${message}
+${mensaje}
 `;
 
   let previousInteractionId: string | undefined;
