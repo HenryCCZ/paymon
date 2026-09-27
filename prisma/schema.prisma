@@ -142,4 +142,10 @@ model CryptoTransaction {
   createdAt DateTime     @default(now())
 }
 
-Wallet
+model Wallet {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  publicKey     String   @unique
+  encryptedSecret String
+  createdAt     DateTime @default(now())
+}
