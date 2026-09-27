@@ -3,7 +3,7 @@ import { askPaymon } from "@/lib/ai/agent";
 
 export async function POST(request: Request) {
   try {
-    const { mensaje, historial } = await request.json();
+    const { mensaje, userId, historial } = await request.json();
 
     if (!mensaje) {
       return NextResponse.json(
@@ -12,7 +12,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { text, pendingAction } = await askPaymon(mensaje, historial ?? []);
+    if (typeof userId !== "string" || !userId) {
+      return NextResponse.json(
+        { error: "Falta identificar la sesión del usuario." },
+        { status: 400 }
+      );
+    }
+
+    const { text, pendingAction } = await askPaymon(mensaje, userId, historial ?? []);
 
     return NextResponse.json({
       respuesta: text,

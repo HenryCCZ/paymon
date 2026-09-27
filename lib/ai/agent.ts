@@ -118,29 +118,32 @@ const tools = [
 ] as any[];
 
 async function executeTool(
+  userId: string,
   name: string,
   args: Record<string, unknown> = {}
 ) {
   switch (name) {
     case "getBalance":
-      return getBalance();
+      return getBalance(userId);
 
     case "getSpendingByCategory":
       return getSpendingByCategory(
+        userId,
         String(args.category ?? "")
       );
 
     case "getTransactions":
-      return getTransactions();
+      return getTransactions(userId);
       
     case "getSpendingSummary":
-      return getSpendingSummary();
+      return getSpendingSummary(userId);
 
     case "getRecurringPayments":
-      return getRecurringPayments();
+      return getRecurringPayments(userId);
 
     case "proposeRecurringPayment":
       return proposeRecurringPayment(
+        userId,
         String(args.recipientName ?? ""),
         Number(args.amount ?? 0),
         args.frequency === "WEEKLY" ? "WEEKLY" : "MONTHLY",
@@ -150,6 +153,7 @@ async function executeTool(
 
     case "proposeCryptoTransaction":
       return proposeCryptoTransaction(
+        userId,
         String(args.toAddress ?? ""),
         Number(args.amount ?? 0)
       );
@@ -161,6 +165,7 @@ async function executeTool(
 
 export async function askPaymon(
   mensaje: string,
+  userId: string,
   historial: any[] = []
 ) {
  const historialTexto = historial
@@ -226,6 +231,7 @@ ${mensaje}
       );
 
       const result = await executeTool(
+        userId,
         call.name,
         call.arguments ?? {}
       );

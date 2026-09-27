@@ -1,8 +1,6 @@
 import { ActionStatus, Category, RecurringStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
-const DEMO_USER_ID = "demo-user-001";
-
 const categoryBySpanishName: Record<string, Category> = {
   comida: Category.FOOD,
   alimentos: Category.FOOD,
@@ -26,9 +24,9 @@ function normalizeCategory(category: string) {
     .toLowerCase();
 }
 
-export async function getBalance() {
+export async function getBalance(userId: string) {
   const account = await prisma.account.findFirst({
-    where: { userId: DEMO_USER_ID },
+    where: { userId },
   });
 
   return {
@@ -37,9 +35,9 @@ export async function getBalance() {
   };
 }
 
-export async function getSpendingByCategory(category: string) {
+export async function getSpendingByCategory(userId: string, category: string) {
   const account = await prisma.account.findFirst({
-    where: { userId: DEMO_USER_ID },
+    where: { userId },
     select: { currency: true },
   });
   const prismaCategory = categoryBySpanishName[normalizeCategory(category)];
@@ -56,7 +54,7 @@ export async function getSpendingByCategory(category: string) {
   const movimientos = await prisma.transaction.findMany({
     where: {
       category: prismaCategory,
-      account: { is: { userId: DEMO_USER_ID } },
+      account: { is: { userId } },
     },
     orderBy: { date: "desc" },
   });
@@ -74,27 +72,27 @@ export async function getSpendingByCategory(category: string) {
   };
 }
 
-export async function getTransactions() {
+export async function getTransactions(userId: string) {
   return prisma.transaction.findMany({
     where: {
-      account: { is: { userId: DEMO_USER_ID } },
+      account: { is: { userId } },
     },
     include: { account: true },
     orderBy: { date: "desc" },
   });
 }
 
-export async function getSpendingSummary() {
+export async function getSpendingSummary(userId: string) {
   const [groups, account] = await Promise.all([
     prisma.transaction.groupBy({
       by: ["category"],
       where: {
-        account: { is: { userId: DEMO_USER_ID } },
+        account: { is: { userId } },
       },
       _sum: { amount: true },
     }),
     prisma.account.findFirst({
-      where: { userId: DEMO_USER_ID },
+      where: { userId },
       select: { currency: true },
     }),
   ]);
@@ -134,10 +132,10 @@ export async function getSpendingSummary() {
   };
 }
 
-export async function getRecurringPayments() {
+export async function getRecurringPayments(userId: string) {
   return prisma.recurringPayment.findMany({
     where: {
-      userId: DEMO_USER_ID,
+      userId,
       status: RecurringStatus.ACTIVE,
     },
     include: {
@@ -150,6 +148,7 @@ export async function getRecurringPayments() {
 }
 
 export async function proposeRecurringPayment(
+  userId: string,
   recipientName: string,
   amount: number,
   frequency: "WEEKLY" | "MONTHLY",
@@ -157,19 +156,19 @@ export async function proposeRecurringPayment(
   dayOfMonth?: number
 ) {
   const account = await prisma.account.findFirst({
-    where: { userId: DEMO_USER_ID },
+    where: { userId },
   });
   if (!account) throw new Error("No se encontró la cuenta del usuario.");
 
   let recipient = await prisma.recipient.findFirst({
     where: {
-      userId: DEMO_USER_ID,
+      userId,
       name: { equals: recipientName, mode: "insensitive" },
     },
   });
   if (!recipient) {
     recipient = await prisma.recipient.create({
-      data: { userId: DEMO_USER_ID, name: recipientName },
+      data: { userId, name: recipientName },
     });
   }
 
@@ -178,7 +177,7 @@ export async function proposeRecurringPayment(
 
   const action = await prisma.aiAction.create({
     data: {
-      userId: DEMO_USER_ID,
+      userId,
       action: "create_recurring_payment",
       status: ActionStatus.PENDING_CONFIRMATION,
       arguments: {
@@ -207,6 +206,7 @@ export async function proposeRecurringPayment(
 }
 
 export async function proposeCryptoTransaction(
+  userId: string,
   toAddress: string,
   amount: number
 ) {
@@ -214,7 +214,7 @@ export async function proposeCryptoTransaction(
 
   const action = await prisma.aiAction.create({
     data: {
-      userId: DEMO_USER_ID,
+      userId,
       action: "create_crypto_transaction",
       status: ActionStatus.PENDING_CONFIRMATION,
       arguments: {
