@@ -60,9 +60,9 @@ También puede preparar determinadas operaciones financieras, pero no ejecuta op
 
 Mira Payvat en funcionamiento:
 
-[![Demo de Payvat](https://payvat.vercel.app/)
+[Demo de Payvat](https://payvat.vercel.app/)
 
- [Ver demo completa en YouTube](https://www.youtube.com/watch?v=Y1BKuFo_768)
+[Ver demo completa en YouTube](https://www.youtube.com/watch?v=Y1BKuFo_768)
 
 ## Funcionalidades
 
